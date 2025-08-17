@@ -36,11 +36,11 @@ export const dummyUsers: User[] = [
 ];
 
 export const dummyCategories: Category[] = [
-  { id: '1', name: 'Electronics', description: 'Electronic items and accessories' },
-  { id: '2', name: 'Clothing', description: 'Apparel and fashion items' },
-  { id: '3', name: 'Food & Beverages', description: 'Food and drink items' },
-  { id: '4', name: 'Books & Stationery', description: 'Books, notebooks, and office supplies' },
-  { id: '5', name: 'Home & Garden', description: 'Home improvement and garden items' }
+  { id: '1', name: 'Electronics', description: 'Electronic items and accessories', color: "from-green-500 to-green-700" },
+  { id: '2', name: 'Clothing', description: 'Apparel and fashion items', color: "from-yellow-500 to-yellow-700" },
+  { id: '3', name: 'Food & Beverages', description: 'Food and drink items', color: "from-blue-500 to-blue-700" },
+  { id: '4', name: 'Books & Stationery', description: 'Books, notebooks, and office supplies', color: "from-pink-500 to-pink-700" },
+  { id: '5', name: 'Home & Garden', description: 'Home improvement and garden items', color: "from-pink-500 to-pink-700" }
 ];
 
 export const dummyItems: Item[] = [
