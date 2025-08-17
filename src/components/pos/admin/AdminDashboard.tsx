@@ -4,7 +4,7 @@ import {
   ShoppingCart,
   FileText,
   Package,
-  Users as UsersIcon,
+  Users,
   AlertTriangle,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -20,7 +20,7 @@ const AdminDashboard: React.FC<AdminHomeProps> = ({ onOpen }) => {
 
   // Define a mapping for routes
   const pathMap: Record<TileId, string> = {
-    dashboard: '/admin',  // Use '/admin' or a specific relative route
+    dashboard: '/admin',
     pos: '/pos/bill-history',
     inventory: '/admin/inventory',
     reports: '/admin/reports',
@@ -72,7 +72,7 @@ const AdminDashboard: React.FC<AdminHomeProps> = ({ onOpen }) => {
       id: 'users',
       title: 'Users',
       subtitle: 'Manage Accounts',
-      icon: UsersIcon,
+      icon: Users,
       gradient: 'from-gray-700 via-gray-800 to-gray-900',
       shadowColor: 'shadow-gray-500/25',
     },
@@ -86,9 +86,22 @@ const AdminDashboard: React.FC<AdminHomeProps> = ({ onOpen }) => {
     },
   ];
 
+  const handleTileClick = (tile: { id: TileId }) => {
+    console.log(`Clicked tile: ${tile.id}`);
+    const path = pathMap[tile.id];
+    console.log(`Navigating to: ${path}`);
+    
+    // Call the onOpen prop if provided
+    if (onOpen) {
+      onOpen(tile.id);
+    }
+    
+    // Navigate to the route
+    navigate(path);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4 mb-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -98,7 +111,6 @@ const AdminDashboard: React.FC<AdminHomeProps> = ({ onOpen }) => {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-6 pb-12">
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
           {tiles.map((tile) => {
@@ -106,14 +118,9 @@ const AdminDashboard: React.FC<AdminHomeProps> = ({ onOpen }) => {
             return (
               <button
                 key={tile.id}
-                onClick={() => {
-                  // On click, navigate to the corresponding route
-                  const to = pathMap[tile.id];
-                  navigate(to); // Navigate directly based on the tile's mapped path
-                }}
+                onClick={() => handleTileClick(tile)}
                 aria-label={tile.title}
-                className={`
-                  group relative p-8 rounded-2xl text-left transition-all duration-300
+                className={`group relative p-8 rounded-2xl text-left transition-all duration-300
                   bg-gradient-to-br ${tile.gradient}
                   shadow-xl ${tile.shadowColor}
                   hover:shadow-2xl hover:-translate-y-1 hover:scale-105
