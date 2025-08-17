@@ -1,32 +1,36 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  ShoppingCart, 
-  Calendar, 
-  Download,
+import React, { useState } from "react";
+import {
+  DollarSign,
+  TrendingUp,
+  ShoppingCart,
+  Calendar,
   BarChart3,
   PieChart,
-  Users2
-} from 'lucide-react';
-import { getSalesByPeriod, dummySales, dummyItems, dummyUsers } from '@/data/dummyData';
+  Users2,
+  Download,
+  Package,
+  Activity,
+} from "lucide-react";
+import {
+  getSalesByPeriod,
+  dummySales,
+  dummyItems,
+} from "@/data/dummyData";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 
-const ReportsView = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
-  
+const ReportsView: React.FC = () => {
+  const [selectedPeriod, setSelectedPeriod] = useState<
+    "daily" | "weekly" | "monthly" | "yearly"
+  >("monthly");
+  const [stockData, setStockData] = useState(dummyItems);
+
   const periodData = getSalesByPeriod(selectedPeriod);
-  
-  // Calculate profit (assuming 30% profit margin for demo)
   const profitMargin = 0.3;
   const totalProfit = periodData.totalSales * profitMargin;
-  
-  // Get popular items
+
+  // --- Top items ---
   const itemSales = dummySales.reduce((acc, sale) => {
-    sale.items.forEach(item => {
+    sale.items.forEach((item) => {
       if (!acc[item.itemId]) {
         acc[item.itemId] = { name: item.itemName, quantity: 0, revenue: 0 };
       }
@@ -35,265 +39,348 @@ const ReportsView = () => {
     });
     return acc;
   }, {} as Record<string, { name: string; quantity: number; revenue: number }>);
-  
+
   const topItems = Object.entries(itemSales)
     .sort((a, b) => b[1].quantity - a[1].quantity)
     .slice(0, 5);
-  
-  // Customer analysis (simplified)
+
+  // --- Customer analysis ---
   const customerAnalysis = {
-    totalCustomers: dummySales.filter(sale => sale.customerInfo).length,
-    loyalCustomers: Math.floor(dummySales.filter(sale => sale.customerInfo).length * 0.3),
-    averageOrderValue: periodData.totalTransactions > 0 ? periodData.totalSales / periodData.totalTransactions : 0
+    totalCustomers: dummySales.filter((s) => s.customerInfo).length,
+    loyalCustomers: Math.floor(
+      dummySales.filter((s) => s.customerInfo).length * 0.3
+    ),
+    averageOrderValue:
+      periodData.totalTransactions > 0
+        ? periodData.totalSales / periodData.totalTransactions
+        : 0,
   };
 
+  // --- Revenue Report (dummy trend) ---
+  const revenueTrend = [
+    { month: "Jan", revenue: 12000 },
+    { month: "Feb", revenue: 18000 },
+    { month: "Mar", revenue: 15000 },
+    { month: "Apr", revenue: 22000 },
+    { month: "May", revenue: 20000 },
+    { month: "Jun", revenue: 25000 },
+  ];
+
+  const revenueByCategory = stockData.reduce((acc, item) => {
+    if (!acc[item.category]) acc[item.category] = 0;
+    acc[item.category] += item.stock * item.price;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const revenueCategoryData = Object.entries(revenueByCategory).map(
+    ([category, value]) => ({ category, value })
+  );
+
+  // --- Export ---
   const exportReport = () => {
     const reportData = {
       period: selectedPeriod,
       totalSales: periodData.totalSales,
       totalTransactions: periodData.totalTransactions,
-      totalProfit: totalProfit,
-      topItems: topItems,
-      customerAnalysis: customerAnalysis,
-      generatedAt: new Date().toISOString()
+      totalProfit,
+      topItems,
+      customerAnalysis,
+      stockData,
+      generatedAt: new Date().toISOString(),
     };
-    
+
     const dataStr = JSON.stringify(reportData, null, 2);
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
-    
-    const exportFileDefaultName = `pos-report-${selectedPeriod}-${new Date().toISOString().split('T')[0]}.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
+    const dataUri =
+      "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
+
+    const exportFileDefaultName = `pos-report-${selectedPeriod}-${new Date()
+      .toISOString()
+      .split("T")[0]}.json`;
+
+    const linkElement = document.createElement("a");
+    linkElement.setAttribute("href", dataUri);
+    linkElement.setAttribute("download", exportFileDefaultName);
     linkElement.click();
   };
 
+  // --- KPI tiles ---
+  const kpiCards = [
+    {
+      title: "Total Sales",
+      value: `$${periodData.totalSales.toFixed(2)}`,
+      subtitle: `${selectedPeriod} revenue`,
+      icon: DollarSign,
+      gradient: "from-emerald-500 via-green-500 to-teal-500",
+    },
+    {
+      title: "Total Profit",
+      value: `$${totalProfit.toFixed(2)}`,
+      subtitle: "30% profit margin",
+      icon: TrendingUp,
+      gradient: "from-indigo-500 via-purple-500 to-fuchsia-500",
+    },
+    {
+      title: "Transactions",
+      value: `${periodData.totalTransactions}`,
+      subtitle: "Total orders",
+      icon: ShoppingCart,
+      gradient: "from-sky-500 via-blue-500 to-indigo-500",
+    },
+    {
+      title: "Avg. Order",
+      value: `$${customerAnalysis.averageOrderValue.toFixed(2)}`,
+      subtitle: "Per transaction",
+      icon: Calendar,
+      gradient: "from-orange-400 via-amber-500 to-red-500",
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 px-6 py-4 mb-8 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Reports & Analytics</h1>
-          <p className="text-muted-foreground">Comprehensive business insights and performance metrics</p>
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Reports & Analytics
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Comprehensive business insights and performance metrics
+          </p>
         </div>
-        
-        <div className="flex gap-4 items-center">
-          <Select value={selectedPeriod} onValueChange={(value: any) => setSelectedPeriod(value)}>
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-              <SelectItem value="yearly">Yearly</SelectItem>
-            </SelectContent>
-          </Select>
-          
-          <Button onClick={exportReport} variant="outline">
-            <Download className="w-4 h-4 mr-2" />
-            Export Report
-          </Button>
+
+        <div className="flex gap-4">
+          <select
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value as any)}
+            className="border rounded-lg px-3 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="yearly">Yearly</option>
+          </select>
+          <button
+            onClick={exportReport}
+            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 transition"
+          >
+            <Download className="w-4 h-4" /> Export Report
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* Sales Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-            <DollarSign className="h-4 w-4 text-success" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-success">${periodData.totalSales.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground capitalize">{selectedPeriod} revenue</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Profit</CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">${totalProfit.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">30% profit margin</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Transactions</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-admin" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-admin">{periodData.totalTransactions}</div>
-            <p className="text-xs text-muted-foreground">Total orders</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Avg. Order</CardTitle>
-            <Calendar className="h-4 w-4 text-secondary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${customerAnalysis.averageOrderValue.toFixed(2)}</div>
-            <p className="text-xs text-muted-foreground">Per transaction</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* KPI Section */}
+      <main className="max-w-7xl mx-auto px-6 pb-12">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          {kpiCards.map((card, idx) => {
+            const Icon = card.icon;
+            return (
+              <div
+                key={idx}
+                className={`p-6 rounded-2xl text-white bg-gradient-to-br ${card.gradient}
+                  shadow-lg hover:shadow-2xl hover:-translate-y-1 hover:scale-105 transition-all duration-300`}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                    <Icon className="w-6 h-6" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold">{card.title}</h3>
+                <p className="text-2xl font-bold mt-2">{card.value}</p>
+                <p className="text-sm opacity-80">{card.subtitle}</p>
+              </div>
+            );
+          })}
+        </div>
 
-      {/* Detailed Reports */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Top Selling Items */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <BarChart3 className="w-5 h-5 mr-2" />
-              Top Selling Items
-            </CardTitle>
-            <CardDescription>Best performing products by quantity sold</CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Revenue Report */}
+        <div className="mt-10 bg-white rounded-2xl shadow p-6">
+          <h2 className="text-xl font-bold flex items-center gap-2 mb-6">
+            <Activity className="w-5 h-5 text-red-500" /> Revenue Report
+          </h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Line Chart */}
+            <div>
+              <h4 className="font-medium mb-3">Revenue Trend</h4>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={revenueTrend}>
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="revenue" stroke="#4f46e5" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+            {/* Bar Chart */}
+            <div>
+              <h4 className="font-medium mb-3">Revenue by Category</h4>
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={revenueCategoryData}>
+                  <XAxis dataKey="category" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="#10b981" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Existing Reports */}
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Items */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
+              <BarChart3 className="w-5 h-5 text-indigo-600" /> Top Selling Items
+            </h2>
             <div className="space-y-4">
               {topItems.map(([itemId, data], index) => (
-                <div key={itemId} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline" className="w-8 h-8 rounded-full flex items-center justify-center p-0">
-                      {index + 1}
-                    </Badge>
-                    <div>
-                      <p className="font-medium">{data.name}</p>
-                      <p className="text-sm text-muted-foreground">{data.quantity} units sold</p>
-                    </div>
+                <div
+                  key={itemId}
+                  className="flex justify-between items-center p-3 bg-gray-50 rounded-lg"
+                >
+                  <div>
+                    <p className="font-medium">
+                      #{index + 1} {data.name}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {data.quantity} units sold
+                    </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">${data.revenue.toFixed(2)}</p>
-                    <p className="text-sm text-muted-foreground">Revenue</p>
-                  </div>
+                  <p className="font-medium text-indigo-600">
+                    ${data.revenue.toFixed(2)}
+                  </p>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Customer Analysis */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Users2 className="w-5 h-5 mr-2" />
-              Customer Analysis
-            </CardTitle>
-            <CardDescription>Customer behavior and loyalty insights</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <p className="text-2xl font-bold">{customerAnalysis.totalCustomers}</p>
-                  <p className="text-sm text-muted-foreground">Total Customers</p>
-                </div>
-                <div className="text-center p-4 bg-muted/50 rounded-lg">
-                  <p className="text-2xl font-bold text-primary">{customerAnalysis.loyalCustomers}</p>
-                  <p className="text-sm text-muted-foreground">Loyal Customers</p>
-                </div>
+          {/* Customer Analysis */}
+          <div className="bg-white rounded-2xl shadow p-6">
+            <h2 className="text-xl font-bold flex items-center gap-2 mb-4">
+              <Users2 className="w-5 h-5 text-green-600" /> Customer Analysis
+            </h2>
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <p className="text-2xl font-bold">
+                  {customerAnalysis.totalCustomers}
+                </p>
+                <p className="text-sm text-gray-500">Total Customers</p>
               </div>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Customer Retention</span>
-                  <Badge variant="secondary">
-                    {Math.round((customerAnalysis.loyalCustomers / customerAnalysis.totalCustomers) * 100)}%
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Average Order Value</span>
-                  <Badge variant="outline">${customerAnalysis.averageOrderValue.toFixed(2)}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Repeat Purchase Rate</span>
-                  <Badge variant="secondary">65%</Badge>
-                </div>
+              <div className="text-center p-4 bg-gray-50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">
+                  {customerAnalysis.loyalCustomers}
+                </p>
+                <p className="text-sm text-gray-500">Loyal Customers</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span>Retention</span>
+                <span className="font-medium text-green-600">
+                  {Math.round(
+                    (customerAnalysis.loyalCustomers /
+                      customerAnalysis.totalCustomers) *
+                      100
+                  )}
+                  %
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Avg Order Value</span>
+                <span className="font-medium">
+                  ${customerAnalysis.averageOrderValue.toFixed(2)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span>Repeat Purchase</span>
+                <span className="font-medium text-indigo-600">65%</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      {/* Stock Analysis */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <PieChart className="w-5 h-5 mr-2" />
-            Stock Report
-          </CardTitle>
-          <CardDescription>Current inventory status and stock movement</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-4">
-              <h4 className="font-medium">Stock Categories</h4>
-              {Object.entries(dummyItems.reduce((acc, item) => {
-                if (!acc[item.category]) {
-                  acc[item.category] = { count: 0, totalStock: 0 };
-                }
-                acc[item.category].count++;
-                acc[item.category].totalStock += item.stock;
-                return acc;
-              }, {} as Record<string, { count: number; totalStock: number }>)).map(([category, data]) => (
-                <div key={category} className="flex justify-between items-center">
-                  <span className="text-sm">{category}</span>
-                  <div className="text-right">
-                    <p className="text-sm font-medium">{data.count} items</p>
-                    <p className="text-xs text-muted-foreground">{data.totalStock} units</p>
-                  </div>
+        {/* Stock Report */}
+        <div className="mt-10 bg-white rounded-2xl shadow p-6">
+          <h2 className="text-xl font-bold flex items-center gap-2 mb-6">
+            <PieChart className="w-5 h-5 text-orange-500" /> Stock Report
+          </h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Categories */}
+            <div>
+              <h4 className="font-medium mb-3">Stock Categories</h4>
+              {Object.entries(
+                stockData.reduce((acc, item) => {
+                  if (!acc[item.category]) {
+                    acc[item.category] = { count: 0, totalStock: 0 };
+                  }
+                  acc[item.category].count++;
+                  acc[item.category].totalStock += item.stock;
+                  return acc;
+                }, {} as Record<string, { count: number; totalStock: number }>),
+              ).map(([category, data]) => (
+                <div
+                  key={category}
+                  className="flex justify-between py-1 border-b text-sm"
+                >
+                  <span>{category}</span>
+                  <span>
+                    {data.count} items / {data.totalStock} units
+                  </span>
                 </div>
               ))}
             </div>
-            
-            <div className="space-y-4">
-              <h4 className="font-medium">Low Stock Items</h4>
-              {dummyItems
-                .filter(item => item.stock <= item.lowStockThreshold)
+
+            {/* Low stock */}
+            <div>
+              <h4 className="font-medium mb-3">Low Stock Items</h4>
+              {stockData
+                .filter((item) => item.stock <= item.lowStockThreshold)
                 .slice(0, 5)
-                .map(item => (
-                  <div key={item.id} className="flex justify-between items-center">
-                    <span className="text-sm">{item.name}</span>
-                    <Badge variant="destructive" className="text-xs">
-                      {item.stock} left
-                    </Badge>
+                .map((item) => (
+                  <div
+                    key={item.id}
+                    className="flex justify-between py-1 border-b text-sm text-red-600"
+                  >
+                    <span>{item.name}</span>
+                    <span>{item.stock} left</span>
                   </div>
-                ))
-              }
+                ))}
             </div>
-            
-            <div className="space-y-4">
-              <h4 className="font-medium">Stock Value</h4>
-              <div className="space-y-2">
+
+            {/* Stock value */}
+            <div>
+              <h4 className="font-medium mb-3">Stock Value</h4>
+              <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-sm">Total Inventory Value</span>
-                  <span className="font-medium">
-                    ${dummyItems.reduce((sum, item) => sum + (item.price * item.stock), 0).toFixed(2)}
+                  <span>Total Value</span>
+                  <span className="font-semibold">
+                    $
+                    {stockData
+                      .reduce((sum, item) => sum + item.price * item.stock, 0)
+                      .toFixed(2)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Total Units</span>
-                  <span className="font-medium">
-                    {dummyItems.reduce((sum, item) => sum + item.stock, 0)} units
+                  <span>Total Units</span>
+                  <span className="font-semibold">
+                    {stockData.reduce((sum, item) => sum + item.stock, 0)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">Average Item Value</span>
-                  <span className="font-medium">
-                    ${(dummyItems.reduce((sum, item) => sum + item.price, 0) / dummyItems.length).toFixed(2)}
+                  <span>Avg Item Value</span>
+                  <span className="font-semibold">
+                    {(
+                      stockData.reduce((sum, item) => sum + item.price, 0) /
+                      stockData.length
+                    ).toFixed(2)}
                   </span>
                 </div>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+      </main>
     </div>
   );
 };
