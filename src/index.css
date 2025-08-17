@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Professional POS System Design System */
+
+@layer base {
+  :root {
+    /* Core Background & Text */
+    --background: 220 15% 98%;
+    --foreground: 215 25% 15%;
+
+    /* Card & Surface Colors */
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+
+    /* Primary Brand - Professional Blue */
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 217 91% 55%;
+
+    /* Secondary - Clean Gray */
+    --secondary: 220 15% 95%;
+    --secondary-foreground: 215 25% 25%;
+
+    /* Muted Elements */
+    --muted: 220 15% 94%;
+    --muted-foreground: 215 10% 45%;
+
+    /* Accent - Success Green */
+    --accent: 142 71% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Status Colors */
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 48 96% 53%;
+    --warning-foreground: 0 0% 100%;
+    
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Interactive Elements */
+    --border: 220 15% 88%;
+    --input: 220 15% 96%;
+    --ring: 217 91% 60%;
+
+    /* Admin Theme */
+    --admin: 259 94% 51%;
+    --admin-foreground: 0 0% 100%;
+    --admin-bg: 259 94% 98%;
+
+    /* Cashier Theme */
+    --cashier: 142 71% 45%;
+    --cashier-foreground: 0 0% 100%;
+    --cashier-bg: 142 50% 98%;
+
+    /* Salesman Theme */
+    --salesman: 25 95% 53%;
+    --salesman-foreground: 0 0% 100%;
+    --salesman-bg: 25 100% 98%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(217 91% 45%));
+    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%), hsl(142 71% 35%));
+    --gradient-admin: linear-gradient(135deg, hsl(259 94% 51%), hsl(259 94% 41%));
+
+    /* Shadows */
+    --shadow-sm: 0 1px 3px 0 hsl(215 25% 15% / 0.1);
+    --shadow-md: 0 4px 6px -1px hsl(215 25% 15% / 0.1);
+    --shadow-lg: 0 10px 15px -3px hsl(215 25% 15% / 0.1);
+    --shadow-glow: 0 0 20px hsl(217 91% 60% / 0.3);
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 220 15% 97%;
+    --sidebar-foreground: 215 25% 25%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 95%;
+    --sidebar-accent-foreground: 215 25% 25%;
+    --sidebar-border: 220 15% 88%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .dark {
+    --background: 215 25% 8%;
+    --foreground: 220 15% 95%;
+
+    --card: 215 25% 10%;
+    --card-foreground: 220 15% 95%;
+
+    --popover: 215 25% 10%;
+    --popover-foreground: 220 15% 95%;
+
+    --primary: 217 91% 65%;
+    --primary-foreground: 215 25% 8%;
+    --primary-hover: 217 91% 60%;
+
+    --secondary: 215 25% 15%;
+    --secondary-foreground: 220 15% 85%;
+
+    --muted: 215 25% 12%;
+    --muted-foreground: 215 10% 60%;
+
+    --accent: 142 71% 50%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 142 71% 50%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 48 96% 58%;
+    --warning-foreground: 0 0% 10%;
+    
+    --destructive: 0 84% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 25% 20%;
+    --input: 215 25% 15%;
+    --ring: 217 91% 65%;
+
+    --admin: 259 94% 56%;
+    --admin-foreground: 0 0% 100%;
+    --admin-bg: 259 30% 8%;
+
+    --cashier: 142 71% 50%;
+    --cashier-foreground: 0 0% 100%;
+    --cashier-bg: 142 30% 8%;
+
+    --salesman: 25 95% 58%;
+    --salesman-foreground: 0 0% 10%;
+    --salesman-bg: 25 30% 8%;
+
+    --sidebar-background: 215 25% 6%;
+    --sidebar-foreground: 220 15% 85%;
+    --sidebar-primary: 217 91% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 12%;
+    --sidebar-accent-foreground: 220 15% 85%;
+    --sidebar-border: 215 25% 20%;
+    --sidebar-ring: 217 91% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
