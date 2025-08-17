@@ -1,220 +1,150 @@
 import React from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  Package, 
-  Users, 
-  AlertTriangle,
+import {
+  BarChart3,
   ShoppingCart,
-  Calendar,
-  Award
+  FileText,
+  Package,
+  Users as UsersIcon,
+  AlertTriangle,
 } from 'lucide-react';
-import { getSalesByPeriod, getLowStockItems, dummySales, dummyUsers, dummyStockRequests } from '@/data/dummyData';
+import { useNavigate } from 'react-router-dom';
 
-const AdminDashboard = () => {
-  const todaySales = getSalesByPeriod('daily');
-  const weeklySales = getSalesByPeriod('weekly');
-  const monthlySales = getSalesByPeriod('monthly');
-  const lowStockItems = getLowStockItems();
-  const activeUsers = dummyUsers.filter(u => u.isActive);
-  const pendingRequests = dummyStockRequests.filter(r => r.status === 'pending');
+type TileId = 'dashboard' | 'pos' | 'reports' | 'inventory' | 'users' | 'requests';
 
-  const stats = [
+interface AdminHomeProps {
+  onOpen?: (id: TileId) => void;
+}
+
+const AdminDashboard: React.FC<AdminHomeProps> = ({ onOpen }) => {
+  const navigate = useNavigate();
+
+  // Define a mapping for routes
+  const pathMap: Record<TileId, string> = {
+    dashboard: '/admin',  // Use '/admin' or a specific relative route
+    pos: '/pos/bill-history',
+    inventory: '/admin/inventory',
+    reports: '/admin/reports',
+    users: '/admin/users',
+    requests: '/admin/requests',
+  };
+
+  const tiles: Array<{
+    id: TileId;
+    title: string;
+    subtitle: string;
+    icon: React.ComponentType<{ className?: string }>;
+    gradient: string;
+    shadowColor: string;
+  }> = [
     {
-      title: 'Today\'s Sales',
-      value: `$${todaySales.totalSales.toFixed(2)}`,
-      change: '+12.5%',
-      icon: DollarSign,
-      color: 'success'
+      id: 'dashboard',
+      title: 'Dashboard',
+      subtitle: 'Overview & Analytics',
+      icon: BarChart3,
+      gradient: 'from-rose-500 via-pink-500 to-fuchsia-500',
+      shadowColor: 'shadow-pink-500/25',
     },
     {
-      title: 'Weekly Revenue',
-      value: `$${weeklySales.totalSales.toFixed(2)}`,
-      change: '+8.2%',
-      icon: TrendingUp,
-      color: 'primary'
+      id: 'pos',
+      title: 'Point of Sale',
+      subtitle: 'Billing & Payments',
+      icon: ShoppingCart,
+      gradient: 'from-emerald-500 via-green-500 to-teal-500',
+      shadowColor: 'shadow-green-500/25',
     },
     {
-      title: 'Low Stock Items',
-      value: lowStockItems.length.toString(),
-      change: pendingRequests.length > 0 ? 'Action needed' : 'Under control',
+      id: 'inventory',
+      title: 'Inventory',
+      subtitle: 'Stock Management',
       icon: Package,
-      color: lowStockItems.length > 3 ? 'warning' : 'success'
+      gradient: 'from-sky-500 via-blue-500 to-indigo-500',
+      shadowColor: 'shadow-blue-500/25',
     },
     {
-      title: 'Active Users',
-      value: activeUsers.length.toString(),
-      change: `${dummyUsers.length - activeUsers.length} inactive`,
-      icon: Users,
-      color: 'admin'
-    }
+      id: 'reports',
+      title: 'Reports',
+      subtitle: 'Charts & Analytics',
+      icon: FileText,
+      gradient: 'from-fuchsia-500 via-purple-500 to-violet-500',
+      shadowColor: 'shadow-purple-500/25',
+    },
+    {
+      id: 'users',
+      title: 'Users',
+      subtitle: 'Manage Accounts',
+      icon: UsersIcon,
+      gradient: 'from-gray-700 via-gray-800 to-gray-900',
+      shadowColor: 'shadow-gray-500/25',
+    },
+    {
+      id: 'requests',
+      title: 'Requests',
+      subtitle: 'Stock & Approvals',
+      icon: AlertTriangle,
+      gradient: 'from-amber-400 via-orange-500 to-red-500',
+      shadowColor: 'shadow-orange-500/25',
+    },
   ];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Overview of your POS system performance</p>
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200 px-6 py-4 mb-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-600 mt-1">Manage your business operations</p>
+        </div>
+      </header>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => {
-          const Icon = stat.icon;
-          return (
-            <Card key={index} className="relative overflow-hidden">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-                <Icon className={`h-4 w-4 text-${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{stat.value}</div>
-                <p className="text-xs text-muted-foreground">{stat.change}</p>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-
-      {/* Alerts & Notifications */}
-      {(lowStockItems.length > 0 || pendingRequests.length > 0) && (
-        <Card className="border-warning/50 bg-warning/5">
-          <CardHeader>
-            <CardTitle className="flex items-center text-warning">
-              <AlertTriangle className="w-5 h-5 mr-2" />
-              Attention Required
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {lowStockItems.length > 0 && (
-              <div>
-                <h4 className="font-medium mb-2">Low Stock Items ({lowStockItems.length})</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {lowStockItems.slice(0, 6).map(item => (
-                    <div key={item.id} className="flex justify-between items-center p-2 bg-card rounded border">
-                      <span className="text-sm">{item.name}</span>
-                      <Badge variant="secondary">{item.stock} left</Badge>
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 pb-12">
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
+          {tiles.map((tile) => {
+            const Icon = tile.icon;
+            return (
+              <button
+                key={tile.id}
+                onClick={() => {
+                  // On click, navigate to the corresponding route
+                  const to = pathMap[tile.id];
+                  navigate(to); // Navigate directly based on the tile's mapped path
+                }}
+                aria-label={tile.title}
+                className={`
+                  group relative p-8 rounded-2xl text-left transition-all duration-300
+                  bg-gradient-to-br ${tile.gradient}
+                  shadow-xl ${tile.shadowColor}
+                  hover:shadow-2xl hover:-translate-y-1 hover:scale-105
+                  focus:outline-none focus:ring-4 focus:ring-indigo-300
+                  min-h-[200px] flex flex-col justify-between
+                `}
+              >
+                <div className="absolute inset-0 rounded-2xl bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div className="self-start">
+                    <div className="w-14 h-14 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/30 transition-colors duration-300">
+                      <Icon className="w-7 h-7 text-white" />
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {pendingRequests.length > 0 && (
-              <div>
-                <h4 className="font-medium mb-2">Pending Stock Requests ({pendingRequests.length})</h4>
-                <div className="space-y-2">
-                  {pendingRequests.slice(0, 3).map(request => (
-                    <div key={request.id} className="flex justify-between items-center p-2 bg-card rounded border">
-                      <span className="text-sm">Request from Salesman</span>
-                      <Badge variant="outline">Pending</Badge>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Sales Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <ShoppingCart className="w-5 h-5 mr-2" />
-              Recent Sales
-            </CardTitle>
-            <CardDescription>Latest transactions across all cashiers</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {dummySales.slice(0, 5).map(sale => (
-                <div key={sale.id} className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
-                  <div>
-                    <p className="font-medium">{sale.invoiceId}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {new Date(sale.timestamp).toLocaleString()}
+                  </div>
+                  <div className="mt-6">
+                    <h3 className="text-2xl font-bold text-white mb-2 drop-shadow-sm">
+                      {tile.title}
+                    </h3>
+                    <p className="text-white/90 text-sm font-medium">
+                      {tile.subtitle}
                     </p>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium">${sale.total.toFixed(2)}</p>
-                    <Badge variant="outline" className="text-xs">
-                      {sale.paymentMethod.toUpperCase()}
-                    </Badge>
-                  </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Calendar className="w-5 h-5 mr-2" />
-              Performance Summary
-            </CardTitle>
-            <CardDescription>Sales performance across different periods</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Daily Sales</span>
-                <div className="text-right">
-                  <p className="font-medium">${todaySales.totalSales.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">{todaySales.totalTransactions} transactions</p>
+                <div className="absolute top-4 right-4">
+                  <div className="w-3 h-3 rounded-full bg-white/25 group-hover:bg-white/40 transition-colors duration-300"></div>
                 </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Weekly Sales</span>
-                <div className="text-right">
-                  <p className="font-medium">${weeklySales.totalSales.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">{weeklySales.totalTransactions} transactions</p>
-                </div>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm">Monthly Sales</span>
-                <div className="text-right">
-                  <p className="font-medium">${monthlySales.totalSales.toFixed(2)}</p>
-                  <p className="text-xs text-muted-foreground">{monthlySales.totalTransactions} transactions</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Common administrative tasks</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-20 flex-col">
-              <Package className="w-6 h-6 mb-2" />
-              <span className="text-sm">Update Stock</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <Users className="w-6 h-6 mb-2" />
-              <span className="text-sm">Manage Users</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <TrendingUp className="w-6 h-6 mb-2" />
-              <span className="text-sm">View Reports</span>
-            </Button>
-            <Button variant="outline" className="h-20 flex-col">
-              <Award className="w-6 h-6 mb-2" />
-              <span className="text-sm">Loyal Customers</span>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              </button>
+            );
+          })}
+        </div>
+      </main>
     </div>
   );
 };
