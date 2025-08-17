@@ -11,7 +11,7 @@ import RequestsManagement from './admin/RequestsManagement';
 import BillHistory from './cashier/BillHistory';
 
 const POSLayout = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth(); // assuming logout is a function from AuthContext
   const [currentView, setCurrentView] = useState('dashboard');
 
   // Set default view based on user role
@@ -99,15 +99,29 @@ const POSLayout = () => {
 
   return (
     <div className="h-screen flex bg-background">
-      <div className="w-64 border-r border-border">
-        <Navigation 
-          currentView={currentView} 
-          onViewChange={setCurrentView} 
-        />
-      </div>
+      {/* Sidebar is visible only for Cashier */}
+      {user?.role === 'cashier' && (
+        <div className="w-64 border-r border-border">
+          <Navigation 
+            currentView={currentView} 
+            onViewChange={setCurrentView} 
+          />
+        </div>
+      )}
+
       <div className="flex-1 overflow-auto">
         <div className="p-6">
           {renderContent()}
+        </div>
+
+        {/* Logout Button */}
+        <div className="fixed bottom-6 right-6">
+          <button 
+            className="bg-red-500 text-white py-2 px-4 rounded-full shadow-md hover:bg-red-600"
+            onClick={logout} // Log out function from AuthContext
+          >
+            Logout
+          </button>
         </div>
       </div>
     </div>
