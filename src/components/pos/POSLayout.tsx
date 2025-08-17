@@ -1,115 +1,97 @@
-import React, { useState, useEffect } from 'react';
+// src/layouts/POSLayout.tsx
+import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import Navigation from './Navigation';
 import AdminDashboard from './admin/AdminDashboard';
 import POSInterface from './cashier/POSInterface';
 import SalesmanDashboard from './salesman/SalesmanDashboard';
-import ReportsView from './admin/ReportsView';
-import InventoryManagement from './admin/InventoryManagement';
-import UserManagement from './admin/UserManagement';
-import RequestsManagement from './admin/RequestsManagement';
-import BillHistory from './cashier/BillHistory';
+import { Button } from '@/components/ui/button';
 
-const POSLayout = () => {
-  const { user } = useAuth();
-  const [currentView, setCurrentView] = useState('dashboard');
+// If you use React Router, uncomment the next line and the navigate call.
+// import { useNavigate } from 'react-router-dom';
 
-  // Set default view based on user role
-  useEffect(() => {
-    if (user?.role === 'cashier') {
-      setCurrentView('pos');
-    } else {
-      setCurrentView('dashboard');
+const POSLayout: React.FC = () => {
+  const { user, logout } = useAuth();
+  // const navigate = useNavigate();
+
+  // Not signed in → ask to login
+  if (!user) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-xl font-semibold">Not signed in</h1>
+          <p className="text-sm text-muted-foreground mt-2">Please log in to continue.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // If you use React Router:
+      // navigate('/login', { replace: true });
+      // Otherwise, a simple hard redirect:
+      window.location.href = '/';
+    } catch {
+      // no-op; your AuthContext/toast can handle errors if needed
     }
-  }, [user?.role]);
+  };
 
-  // Handle keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey || event.metaKey) {
-        switch (event.key) {
-          case '1':
-            event.preventDefault();
-            setCurrentView('dashboard');
-            break;
-          case '2':
-            event.preventDefault();
-            setCurrentView('pos');
-            break;
-          case '3':
-            event.preventDefault();
-            if (user?.role === 'admin') setCurrentView('reports');
-            if (user?.role === 'cashier') setCurrentView('bills');
-            if (user?.role === 'salesman') setCurrentView('stock');
-            break;
-          case '4':
-            event.preventDefault();
-            if (user?.role === 'admin') setCurrentView('inventory');
-            if (user?.role === 'salesman') setCurrentView('requests');
-            break;
-          case '5':
-            event.preventDefault();
-            if (user?.role === 'admin') setCurrentView('users');
-            break;
-          case '6':
-            event.preventDefault();
-            if (user?.role === 'admin') setCurrentView('requests');
-            break;
-        }
-      }
-    };
+  const RoleHeader = () => (
+    <header className="w-full border-b border-border bg-background/60 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="mx-auto max-w-7xl px-4 py-3 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <span className="text-sm font-semibold text-primary">POS</span>
+          </div>
+          <div>
+            <div className="text-sm font-semibold leading-tight">POS System</div>
+            <div className="text-xs text-muted-foreground leading-tight capitalize">{user.role} panel</div>
+          </div>
+        </div>
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [user?.role]);
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex flex-col items-end">
+            <span className="text-sm font-medium">{user.name ?? 'User'}</span>
+            <span className="text-xs text-muted-foreground">{user.email}</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={handleLogout}>
+            Logout
+          </Button>
+        </div>
+      </div>
+    </header>
+  );
 
-  const renderContent = () => {
-    switch (currentView) {
-      case 'dashboard':
-        if (user?.role === 'admin') return <AdminDashboard />;
-        if (user?.role === 'salesman') return <SalesmanDashboard />;
-        return <div>Dashboard not available for this role</div>;
-      
-      case 'pos':
-        return <POSInterface />;
-      
-      case 'reports':
-        return <ReportsView />;
-      
-      case 'inventory':
-        return <InventoryManagement />;
-      
-      case 'users':
-        return <UserManagement />;
-      
-      case 'requests':
-        if (user?.role === 'admin') return <RequestsManagement />;
-        return <div>Requests not available for this role</div>;
-      
-      case 'bills':
-        return <BillHistory />;
-      
-      case 'stock':
-        return <SalesmanDashboard />;
-      
+  // Render the correct main view by role — no sidebar, no manual switching
+  const renderByRole = () => {
+    switch (user.role) {
+      case 'cashier':
+        return <POSInterface />;            // Cashier → POSInterface
+      case 'salesman':
+        return <SalesmanDashboard />;       // Salesman → SalesmanDashboard
+      case 'admin':
+        return <AdminDashboard />;          // Admin → AdminDashboard
       default:
-        return <div>View not found</div>;
+        return (
+          <div className="h-[calc(100vh-56px)] flex items-center justify-center">
+            <div className="text-center">
+              <h2 className="text-lg font-semibold">Unsupported role</h2>
+              <p className="text-sm text-muted-foreground mt-2">
+                No view is mapped for role: <span className="font-mono">{String(user.role)}</span>
+              </p>
+            </div>
+          </div>
+        );
     }
   };
 
   return (
-    <div className="h-screen flex bg-background">
-      <div className="w-64 border-r border-border">
-        <Navigation 
-          currentView={currentView} 
-          onViewChange={setCurrentView} 
-        />
-      </div>
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          {renderContent()}
-        </div>
-      </div>
+    <div className="min-h-screen flex flex-col bg-background">
+      <RoleHeader />
+      <main className="flex-1 overflow-auto">
+        <div className="p-4 md:p-6">{renderByRole()}</div>
+      </main>
     </div>
   );
 };
